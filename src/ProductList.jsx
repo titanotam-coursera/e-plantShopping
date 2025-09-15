@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { addItem } from './CartSlice';
 import './ProductList.css'
 import CartItem from './CartItem';
 function ProductList({ onHomeClick }) {
+    const dispatch = useDispatch();
+    const cartItems = useSelector(state => state.cart.items);
     const [showCart, setShowCart] = useState(false);
     const [showPlants, setShowPlants] = useState(false); // State to control the visibility of the About Us page
+    const [addedToCart, setAddedToCart] = useState({});
+
+    // Calculate total quantity of items in cart
+    const totalCartQuantity = cartItems.reduce((total, item) => total + item.quantity, 0);
 
     const plantsArray = [
         {
@@ -252,6 +260,15 @@ function ProductList({ onHomeClick }) {
         e.preventDefault();
         setShowCart(false);
     };
+
+    const handleAddToCart = (product) => {
+        dispatch(addItem(product)); // Dispatch the action to add the product to the cart (Redux action)
+
+        setAddedToCart((prevState) => ({ // Update the local state to reflect that the product has been added
+            ...prevState, // Spread the previous state to retain existing entries
+            [product.name]: true, // Set the current product's name as a key with value 'true' to mark it as added
+        }));
+    };
     return (
         <div>
             <div className="navbar" style={styleObj}>
@@ -269,13 +286,84 @@ function ProductList({ onHomeClick }) {
                 </div>
                 <div style={styleObjUl}>
                     <div> <a href="#" onClick={(e) => handlePlantsClick(e)} style={styleA}>Plants</a></div>
-                    <div> <a href="#" onClick={(e) => handleCartClick(e)} style={styleA}><h1 className='cart'><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" id="IconChangeColor" height="68" width="68"><rect width="156" height="156" fill="none"></rect><circle cx="80" cy="216" r="12"></circle><circle cx="184" cy="216" r="12"></circle><path d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8" fill="none" stroke="#faf9f9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" id="mainIconPathAttribute"></path></svg></h1></a></div>
+                    <div> <a href="#" onClick={(e) => handleCartClick(e)} style={styleA}>
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                            <h1 className='cart'><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" id="IconChangeColor" height="68" width="68"><rect width="156" height="156" fill="none"></rect><circle cx="80" cy="216" r="12"></circle><circle cx="184" cy="216" r="12"></circle><path d="M42.3,72H221.7l-26.4,92.4A15.9,15.9,0,0,1,179.9,176H84.1a15.9,15.9,0,0,1-15.4-11.6L32.5,37.8A8,8,0,0,0,24.8,32H8" fill="none" stroke="#faf9f9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" id="mainIconPathAttribute"></path></svg></h1>
+                            {totalCartQuantity > 0 && (
+                                <span style={{
+                                    position: 'absolute',
+                                    top: '5px',
+                                    right: '5px',
+                                    backgroundColor: '#ff4444',
+                                    color: 'white',
+                                    borderRadius: '50%',
+                                    width: '20px',
+                                    height: '20px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '12px',
+                                    fontWeight: 'bold'
+                                }}>
+                                    {totalCartQuantity}
+                                </span>
+                            )}
+                        </div>
+                    </a></div>
                 </div>
             </div>
             {!showCart ? (
                 <div className="product-grid">
-
-
+                    {plantsArray.map((category) => (
+                        <div key={category.category}>
+                            <h2 style={{ textAlign: 'center', margin: '20px 0', color: '#4CAF50' }}>
+                                {category.category}
+                            </h2>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', padding: '20px' }}>
+                                {category.plants.map((plant) => (
+                                    <div key={plant.name} style={{ 
+                                        border: '1px solid #ddd', 
+                                        borderRadius: '8px', 
+                                        padding: '15px', 
+                                        backgroundColor: '#fff',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                    }}>
+                                        <img 
+                                            src={plant.image} 
+                                            alt={plant.name} 
+                                            style={{ 
+                                                width: '100%', 
+                                                height: '200px', 
+                                                objectFit: 'cover', 
+                                                borderRadius: '4px',
+                                                marginBottom: '10px'
+                                            }} 
+                                        />
+                                        <h3 style={{ margin: '10px 0', color: '#333' }}>{plant.name}</h3>
+                                        <p style={{ color: '#666', marginBottom: '10px' }}>{plant.description}</p>
+                                        <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#4CAF50', marginBottom: '15px' }}>
+                                            {plant.cost}
+                                        </p>
+                                        <button 
+                                            onClick={() => handleAddToCart(plant)}
+                                            style={{
+                                                backgroundColor: addedToCart[plant.name] ? '#45a049' : '#4CAF50',
+                                                color: 'white',
+                                                padding: '10px 20px',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                fontSize: '16px',
+                                                width: '100%'
+                                            }}
+                                        >
+                                            {addedToCart[plant.name] ? 'Added to Cart!' : 'Add to Cart'}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             ) : (
                 <CartItem onContinueShopping={handleContinueShopping} />
